@@ -7,7 +7,7 @@ import "os"
 func GenerateCSV(fileName string, records [][]string){
 
         fmt.Println(records)
-        csvfile, err := os.OpenFile("/Users/deep.patel/Downloads/logs/" + fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
+        csvfile, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
         if err != nil{
                 fmt.Println("Error: ", err)
                 return;
