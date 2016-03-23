@@ -13,7 +13,13 @@ func main() {
         functionVersion:= flag.String("version", "17", "function version")
         manual:= flag.Bool("custom", false, "Custom date")
         log:= flag.String("log", "/mnt/data/mparticle/logs/", "Log location")
+        awsProfile:= flag.String("aws-user", "", "User Profile name to be used to access AWS Cloud Watch service")
         flag.Parse()
+
+        if *awsProfile == ""{
+            fmt.Println("Please supply AWS Profile name to access the AWS Cloud Watch service")
+            return;
+        }
 
         var streamPattern string;
         if (*manual){
@@ -22,7 +28,7 @@ func main() {
             streamPattern = time.Now().Add(-86400*time.Second).UTC().Format("2006/01/02") + "/[" + *functionVersion + "]";
         }
 
-        logStreamData:= awslogs.GetLogStreams("/aws/lambda/mParticleEventListener", streamPattern)
+        logStreamData:= awslogs.GetLogStreams(*awsProfile, "/aws/lambda/mParticleEventListener", streamPattern)
         logStreamList := logStreamData.LogStreams;
         logStreamListLength := len(logStreamList)
         
@@ -30,7 +36,7 @@ func main() {
 
         for i:=0; i<logStreamListLength; i++ {
                 fmt.Println("Fetching Events for stream: " + logStreamList[i].LogStreamName)
-                logEventsData := awslogs.GetLogEvents("/aws/lambda/mParticleEventListener",logStreamList[i].LogStreamName)
+                logEventsData := awslogs.GetLogEvents(*awsProfile, "/aws/lambda/mParticleEventListener",logStreamList[i].LogStreamName)
                 logEventsList:= logEventsData.Events
                 logEventsListLength:= len(logEventsList)
                 for logEventsListLength!=0 {
@@ -56,7 +62,7 @@ func main() {
                             toBeWritten[j][2] = logEventsList[j].Message;
                     }
                     util.GenerateCSV(*log + strings.Replace(logStreamList[i].LogStreamName + ".csv", "/", "_", -1), toBeWritten)
-                    logEventsData = awslogs.GetLogEventsWithToken("/aws/lambda/mParticleEventListener",logStreamList[i].LogStreamName, logEventsData.NextForwardToken)
+                    logEventsData = awslogs.GetLogEventsWithToken(*awsProfile, "/aws/lambda/mParticleEventListener",logStreamList[i].LogStreamName, logEventsData.NextForwardToken)
                     logEventsList = logEventsData.Events
                     logEventsListLength = len(logEventsList)
                 }
